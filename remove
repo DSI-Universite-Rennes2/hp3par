@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python -W ignore
 import sys
 import os
 import ConfigParser
@@ -37,7 +37,7 @@ def ReadEnv():
 
 
 def main():
-  sys.stderr.write('Creation started...\n')
+  sys.stderr.write('Remove started...\n')
 
   vv_name = ReadEnv()
 
