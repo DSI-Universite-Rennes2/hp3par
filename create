@@ -22,6 +22,7 @@ host        = config.get('3par','host')
 login       = config.get('3par','login')
 password    = config.get('3par','password')
 default_cpg = config.get('3par','default_cpg')
+snap_cpg    = config.get('3par','snap_cpg')
 
 def ReadEnv():
   """Read the mandatory enviromental variables
@@ -70,7 +71,9 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    cl.createVolume(vv_name, cpg, vv_size)
+    
+    optional =  {'snapCPG' : snap_cpg}
+    cl.createVolume(vv_name, cpg, vv_size, optional)
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      

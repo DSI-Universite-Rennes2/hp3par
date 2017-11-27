@@ -1,3 +1,73 @@
-#!/bin/bash
+#!/usr/bin/python
+import sys
+import os
+import socket
+import ConfigParser
+import urllib3
 
-exit 0
+# this is a hack to get the hpe driver module
+# and it's utils module on the search path.
+cmd_folder = os.path.realpath(os.path.abspath("..") )
+if cmd_folder not in sys.path:
+     sys.path.insert(0, cmd_folder)
+
+from hpe3parclient import client, exceptions
+
+#config
+config_file = "/etc/ganeti/extstorage/3par.conf"
+config = ConfigParser.SafeConfigParser()
+if not config.read(config_file):
+  raise ConfigParser.Error("Unable to read config file")
+
+host        = config.get('3par','host')
+login       = config.get('3par','login')
+password    = config.get('3par','password')
+default_cpg = config.get('3par','default_cpg')
+
+def ReadEnv():
+  """Read the mandatory enviromental variables
+  """
+
+  if os.getenv("VOL_NAME") is None :  
+    sys.stderr.write('The environment variable VOL_NAME is missing.\n')
+    sys.exit(1)
+  else :
+    name = os.getenv("VOL_NAME")
+
+  if os.getenv("VOL_SNAPSHOT_NAME") is None :
+    sys.stderr.write('The environment variable VOL_SNAPSHOT_NAME is missing.\n')
+    sys.exit(1)
+  else :
+    snapshot_name = os.getenv("VOL_SNAPSHOT_NAME")
+
+
+  return (snapshot_name,name)
+
+
+def main():
+  sys.stderr.write('Creation started...\n')
+
+  snapshot_name,vv_name = ReadEnv()
+
+  sys.stderr.write('name: %s, snapshot: %s\n' % (vv_name,snapshot_name))
+
+  cl = client.HPE3ParClient(host, False, False, None, True)
+
+  try: 
+    cl.login(login,password)
+  except exceptions.HTTPUnauthorized as ex:
+       pprint.pprint("Login Failed")
+  
+  try:
+    cl.createSnapshot(snapshot_name,vv_name) 
+  except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
+       pprint.pprint("You must login first")                                                                                                                                                                                     
+  except Exception as ex:                                                                                                                                                                                                      
+       print(ex)
+
+  cl.logout()
+
+
+if __name__ == "__main__":
+  sys.exit(main())
+
