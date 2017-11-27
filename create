@@ -36,7 +36,7 @@ def ReadEnv():
     sys.stderr.write('The environment variable VOL_NAME is missing.\n')
     sys.exit(1)
 
-  size = int(os.getenv("VOL_SIZE")) // 1024
+  size = int(os.getenv("VOL_SIZE"))
   if size is None:
     sys.stderr.write('The environment variable VOL_SIZE is missing.\n')
     sys.exit(1)
