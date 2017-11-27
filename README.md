@@ -22,3 +22,9 @@ edit **3par.conf** file and copy it into **/etc/ganeti/extstorage/**
     mkdir /etc/ganeti/extstorage/
     cp 3par.conf /etc/ganeti/extstorage/
     vim /etc/ganeti/extstorage/3par.conf
+
+
+References :
+------------
+
+This project uses python-3parclient from hpe : https://github.com/hpe-storage/python-3parclient
