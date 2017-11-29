@@ -4,6 +4,7 @@ import os
 import socket
 import ConfigParser
 import urllib3
+import time
 
 # this is a hack to get the hpe driver module
 # and it's utils module on the search path.
@@ -12,6 +13,9 @@ if cmd_folder not in sys.path:
      sys.path.insert(0, cmd_folder)
 
 from hpe3parclient import client, exceptions
+
+sys.path.append("/usr/share/ganeti/default")
+from ganeti import utils
 
 #config
 config_file = "/etc/ganeti/extstorage/3par.conf"
@@ -34,15 +38,21 @@ def ReadEnv():
   else :
     name = os.getenv("VOL_NAME")
 
-  return (name)
+  if os.getenv("VOL_CNAME") is None :
+    sys.stderr.write('The environment variable VOL_NAME is missing.\n')
+    sys.exit(1)
+  else :
+    cname = os.getenv("VOL_CNAME")
+
+  return (name,cname)
 
 
 def main():
   sys.stderr.write('Attach started...\n')
 
-  vv_name = ReadEnv()
+  vv_name,vv_cname = ReadEnv()
 
-  sys.stderr.write('name: %s\n' % (vv_name))
+  sys.stderr.write('name: %s, cname: %s\n' % (vv_name,vv_cname))
 
   cl = client.HPE3ParClient(host, False, False, None, True)
 
@@ -52,14 +62,26 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    cl.createVLUN(vv_name,None,socket.gethostname(),None,None,None,True)
+    export_host = socket.gethostname()
+    loc = cl.createVLUN(vv_cname,None,export_host,None,None,None,True)
+    vlun = cl.getVLUN(vv_cname)
+    uuid = vlun['volumeWWN'] 
+
+    #Get multipath device
+    result = utils.RunCmd('ls -d /sys/class/fc_host/host*/issue_lip | xargs -i echo "echo 1 > {}" | sh')
+    result = utils.RunCmd('multipath')
+
+    time.sleep(5)
+
+    cmd = "multipath -ll 3%s | head -1 | awk '{print $1}'" % uuid.lower().strip()
+    device = utils.RunCmd(cmd)
+    sys.stdout.write("/dev/mapper/%s" % device.output.strip())
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      
        print(ex)
 
   cl.logout()
-
 
 if __name__ == "__main__":
   sys.exit(main())

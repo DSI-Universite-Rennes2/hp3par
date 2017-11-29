@@ -4,6 +4,7 @@ import os
 import socket
 import ConfigParser
 import urllib3
+import time
 
 # this is a hack to get the hpe driver module
 # and it's utils module on the search path.
@@ -12,6 +13,10 @@ if cmd_folder not in sys.path:
      sys.path.insert(0, cmd_folder)
 
 from hpe3parclient import client, exceptions
+
+sys.path.append("/usr/share/ganeti/default")
+from ganeti import utils
+
 
 #config
 config_file = "/etc/ganeti/extstorage/3par.conf"
@@ -34,13 +39,20 @@ def ReadEnv():
   else :
     name = os.getenv("VOL_NAME")
 
-  return (name)
+  if os.getenv("VOL_CNAME") is None :
+    sys.stderr.write('The environment variable VOL_CNAME is missing.\n')
+    sys.exit(1)
+  else :
+    cname = os.getenv("VOL_CNAME")
+
+
+  return (name,cname)
 
 
 def main():
   sys.stderr.write('Detach started...\n')
 
-  vv_name = ReadEnv()
+  vv_name, vv_cname = ReadEnv()
 
   sys.stderr.write('name: %s\n' % (vv_name))
 
@@ -52,9 +64,15 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    vlun = cl.getVLUN(vv_name)
-    sys.stderr.write('vlun: %s\n' % (vlun))
-    cl.deleteVLUN(vv_name,vlun['lun'],socket.gethostname(),None)
+    vlun = cl.getVLUN(vv_cname)
+    export_host = socket.gethostname()
+    cl.deleteVLUN(vv_cname,vlun['lun'],export_host,None)
+
+    time.sleep(3)
+    result = utils.RunCmd('multipath -F')
+    cmd="for i in `pvs 2>&1 | grep 'read failed' | awk '{print $1}' | sed 's/://' | sed 's/\/dev\///' | uniq` ; do echo 1> /sys/block/$i/device/delete; done"
+    result = utils.RunCmd(cmd)
+
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      

@@ -33,13 +33,19 @@ def ReadEnv():
   else :
     name = os.getenv("VOL_NAME")
 
-  return (name)
+  if os.getenv("VOL_CNAME") is None :
+    sys.stderr.write('The environment variable VOL_CNAME is missing.\n')
+    sys.exit(1)
+  else :
+    cname = os.getenv("VOL_CNAME")
+
+  return (name,cname)
 
 
 def main():
   sys.stderr.write('Remove started...\n')
 
-  vv_name = ReadEnv()
+  vv_name,vv_cname = ReadEnv()
 
   sys.stderr.write('name: %s\n' % (vv_name))
 
@@ -51,7 +57,7 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    cl.deleteVolume(vv_name)
+    cl.deleteVolume(vv_cname)
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      
