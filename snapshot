@@ -12,44 +12,15 @@ if cmd_folder not in sys.path:
      sys.path.insert(0, cmd_folder)
 
 from hpe3parclient import client, exceptions
-
-#config
-config_file = "/etc/ganeti/extstorage/3par.conf"
-config = ConfigParser.SafeConfigParser()
-if not config.read(config_file):
-  raise ConfigParser.Error("Unable to read config file")
-
-host        = config.get('3par','host')
-login       = config.get('3par','login')
-password    = config.get('3par','password')
-default_cpg = config.get('3par','default_cpg')
-
-def ReadEnv():
-  """Read the mandatory enviromental variables
-  """
-
-  if os.getenv("VOL_NAME") is None :  
-    sys.stderr.write('The environment variable VOL_NAME is missing.\n')
-    sys.exit(1)
-  else :
-    name = os.getenv("VOL_NAME")
-
-  if os.getenv("VOL_SNAPSHOT_NAME") is None :
-    sys.stderr.write('The environment variable VOL_SNAPSHOT_NAME is missing.\n')
-    sys.exit(1)
-  else :
-    snapshot_name = os.getenv("VOL_SNAPSHOT_NAME")
-
-
-  return (snapshot_name,name)
-
+import common
 
 def main():
   sys.stderr.write('Snapshot Creation started...\n')
 
-  snapshot_name,vv_name = ReadEnv()
+  (host,login,password,default_cpg,snap_cpg) = common.getConfig()
+  (vol_name,vol_cname,vol_size,vol_new_size,vol_uuid,vol_metadata,vol_snapshot_name,vol_snapshot_size,vol_open_exclusive,cpg) = common.readEnv()
 
-  sys.stderr.write('name: %s, snapshot: %s\n' % (vv_name,snapshot_name))
+  sys.stderr.write('cname: %s, snapshot: %s\n' % (vol_cname,vol_snapshot_name))
 
   cl = client.HPE3ParClient(host, False, False, None, True)
 
@@ -59,7 +30,7 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    cl.createSnapshot(snapshot_name,vv_name) 
+    cl.createSnapshot(vol_snapshot_name,vol_cname) 
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      

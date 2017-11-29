@@ -11,55 +11,15 @@ if cmd_folder not in sys.path:
      sys.path.insert(0, cmd_folder)
 
 from hpe3parclient import client, exceptions
-
-#config
-config_file = "/etc/ganeti/extstorage/3par.conf"
-config = ConfigParser.SafeConfigParser()
-if not config.read(config_file):
-  raise ConfigParser.Error("Unable to read config file")
-
-host        = config.get('3par','host')
-login       = config.get('3par','login')
-password    = config.get('3par','password')
-default_cpg = config.get('3par','default_cpg')
-snap_cpg    = config.get('3par','snap_cpg')
-
-def ReadEnv():
-  """Read the mandatory enviromental variables
-  """
-
-  name = os.getenv("VOL_NAME")
-  if name is None:
-    sys.stderr.write('The environment variable VOL_NAME is missing.\n')
-    sys.exit(1)
-
-  size = int(os.getenv("VOL_SIZE"))
-  if size is None:
-    sys.stderr.write('The environment variable VOL_SIZE is missing.\n')
-    sys.exit(1)
-
-
-  new_size = int(os.getenv("VOL_NEW_SIZE"))
-  if new_size is None:
-    sys.stderr.write('The environment variable VOL_NEW_SIZE is missing.\n')
-    sys.exit(1)
-
-  return (name, size, new_size)
-
+import common
 
 def main():
   sys.stderr.write('Creation started...\n')
 
-  env = ReadEnv()
+  (host,login,password,default_cpg,snap_cpg) = common.getConfig()
+  (vol_name,vol_cname,vol_size,vol_new_size,vol_uuid,vol_metadata,vol_snapshot_name,vol_snapshot_size,vol_open_exclusive,cpg) = common.readEnv()
 
-  if env is None:
-    sys.stderr.write('Wrong environment. Aborting...\n')
-    sys.exit(1)
-
-  vv_name, vv_size, new_size = env
-
-
-  sys.stderr.write('name: %s, size: %s, newsize: %s\n' % (vv_name, vv_size, new_size))
+  sys.stderr.write('cname: %s, size: %s, newsize: %s\n' % (vol_cname, vol_size, vol_new_size))
 
   cl = client.HPE3ParClient(host, False, False, None, True)
 
@@ -69,8 +29,8 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    amount = new_size - vv_size
-    cl.growVolume(vv_name, amount)
+    amount = vol_new_size - vol_size
+    cl.growVolume(vol_cname, amount)
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      

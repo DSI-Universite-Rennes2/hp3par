@@ -1,7 +1,6 @@
 #!/usr/bin/python -W ignore
 import sys
 import os
-import ConfigParser
 import urllib3
 
 # this is a hack to get the hpe driver module
@@ -11,57 +10,15 @@ if cmd_folder not in sys.path:
      sys.path.insert(0, cmd_folder)
 
 from hpe3parclient import client, exceptions
-
-#config
-config_file = "/etc/ganeti/extstorage/3par.conf"
-config = ConfigParser.SafeConfigParser()
-if not config.read(config_file):
-  raise ConfigParser.Error("Unable to read config file")
-
-host        = config.get('3par','host')
-login       = config.get('3par','login')
-password    = config.get('3par','password')
-default_cpg = config.get('3par','default_cpg')
-snap_cpg    = config.get('3par','snap_cpg')
-
-def ReadEnv():
-  """Read the mandatory enviromental variables
-  """
-
-  if os.getenv("VOL_CNAME") is None :  
-    name = os.getenv("VOL_NAME")
-  else :
-    name = os.getenv("VOL_CNAME")
-
-  if name is None:
-    sys.stderr.write('The environment variable VOL_NAME is missing.\n')
-    sys.exit(1)
-
-  size = int(os.getenv("VOL_SIZE"))
-  if size is None:
-    sys.stderr.write('The environment variable VOL_SIZE is missing.\n')
-    sys.exit(1)
-
-  cpg = os.getenv("EXTP_CPG")
-  if cpg is None:
-    cpg=default_cpg
-
-  return (name, cpg, size)
-
+import common
 
 def main():
   sys.stderr.write('Creation started...\n')
 
-  env = ReadEnv()
+  (host,login,password,default_cpg,snap_cpg) = common.getConfig()
+  (vol_name,vol_cname,vol_size,vol_new_size,vol_uuid,vol_metadata,vol_snapshot_name,vol_snapshot_size,vol_open_exclusive,cpg) = common.readEnv()
 
-  if env is None:
-    sys.stderr.write('Wrong environment. Aborting...\n')
-    sys.exit(1)
-
-  vv_name,cpg, vv_size = env
-
-
-  sys.stderr.write('name: %s, cpg: %s, size: %s\n' % (vv_name, cpg, vv_size))
+  sys.stderr.write('cname: %s, cpg: %s, size: %s\n' % (vol_cname,cpg,vol_size))
 
   cl = client.HPE3ParClient(host, False, False, None, True)
 
@@ -73,7 +30,7 @@ def main():
   try:
     
     optional =  {'snapCPG' : snap_cpg}
-    cl.createVolume(vv_name, cpg, vv_size, optional)
+    cl.createVolume(vol_cname, cpg, vol_size, optional)
   except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
        pprint.pprint("You must login first")                                                                                                                                                                                     
   except Exception as ex:                                                                                                                                                                                                      

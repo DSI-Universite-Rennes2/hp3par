@@ -13,48 +13,19 @@ if cmd_folder not in sys.path:
      sys.path.insert(0, cmd_folder)
 
 from hpe3parclient import client, exceptions
+import common
 
 sys.path.append("/usr/share/ganeti/default")
 from ganeti import utils
 
 
-#config
-config_file = "/etc/ganeti/extstorage/3par.conf"
-config = ConfigParser.SafeConfigParser()
-if not config.read(config_file):
-  raise ConfigParser.Error("Unable to read config file")
-
-host        = config.get('3par','host')
-login       = config.get('3par','login')
-password    = config.get('3par','password')
-default_cpg = config.get('3par','default_cpg')
-
-def ReadEnv():
-  """Read the mandatory enviromental variables
-  """
-
-  if os.getenv("VOL_NAME") is None :  
-    sys.stderr.write('The environment variable VOL_NAME is missing.\n')
-    sys.exit(1)
-  else :
-    name = os.getenv("VOL_NAME")
-
-  if os.getenv("VOL_CNAME") is None :
-    sys.stderr.write('The environment variable VOL_CNAME is missing.\n')
-    sys.exit(1)
-  else :
-    cname = os.getenv("VOL_CNAME")
-
-
-  return (name,cname)
-
-
 def main():
   sys.stderr.write('Detach started...\n')
 
-  vv_name, vv_cname = ReadEnv()
+  (host,login,password,default_cpg,snap_cpg) = common.getConfig()
+  (vol_name,vol_cname,vol_size,vol_new_size,vol_uuid,vol_metadata,vol_snapshot_name,vol_snapshot_size,vol_open_exclusive,cpg) = common.readEnv()
 
-  sys.stderr.write('name: %s\n' % (vv_name))
+  sys.stderr.write('cname: %s\n' % (vol_cname))
 
   cl = client.HPE3ParClient(host, False, False, None, True)
 
@@ -64,9 +35,9 @@ def main():
        pprint.pprint("Login Failed")
   
   try:
-    vlun = cl.getVLUN(vv_cname)
+    vlun = cl.getVLUN(vol_cname)
     export_host = socket.gethostname()
-    cl.deleteVLUN(vv_cname,vlun['lun'],export_host,None)
+    cl.deleteVLUN(vol_cname,vlun['lun'],export_host,None)
 
     time.sleep(3)
     result = utils.RunCmd('multipath -F')
