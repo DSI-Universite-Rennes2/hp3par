@@ -36,9 +36,22 @@ def main():
   
   try:
     export_host = socket.gethostname()
-    loc = cl.createVLUN(vol_cname,None,export_host,None,None,None,True)
+    vluns = cl.getVLUNs()
+    found = False
+
+    if vluns:
+      for vlun in vluns['members']:
+        if (vlun['volumeName'] == vol_cname and vlun['hostname'] == export_host) :
+	   found = True
+	
+    if (found == True) :
+        sys.stderr.write('Volume already exported : %s\n' % vol_cname )
+    else :  
+        loc = cl.createVLUN(vol_cname,None,export_host,None,None,None,True)
+
     vlun = cl.getVLUN(vol_cname)
-    uuid = vlun['volumeWWN'] 
+    uuid = vlun['volumeWWN']
+
 
     #Get multipath device
     result = utils.RunCmd('ls -d /sys/class/fc_host/host*/issue_lip | xargs -i echo "echo 1 > {}" | sh')
