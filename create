@@ -2,6 +2,7 @@
 import sys
 import os
 import urllib3
+import time
 
 # this is a hack to get the hpe driver module
 # and it's utils module on the search path.
@@ -31,9 +32,11 @@ def main():
     
     optional =  {'snapCPG' : snap_cpg}
     cl.createVolume(vol_cname, cpg, vol_size, optional)
-  except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
-       pprint.pprint("You must login first")                                                                                                                                                                                     
-  except Exception as ex:                                                                                                                                                                                                      
+    time.sleep(3)
+
+  except exceptions.HTTPUnauthorized as ex:
+       pprint.pprint("You must login first")
+  except Exception as ex:
        print(ex)
 
   cl.logout()

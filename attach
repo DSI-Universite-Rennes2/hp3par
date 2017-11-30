@@ -62,9 +62,9 @@ def main():
     cmd = "multipath -ll 3%s | head -1 | awk '{print $1}'" % uuid.lower().strip()
     device = utils.RunCmd(cmd)
     sys.stdout.write("/dev/mapper/%s" % device.output.strip())
-  except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
-       pprint.pprint("You must login first")                                                                                                                                                                                     
-  except Exception as ex:                                                                                                                                                                                                      
+  except exceptions.HTTPUnauthorized as ex:
+       pprint.pprint("You must login first")
+  except Exception as ex:
        print(ex)
 
   cl.logout()

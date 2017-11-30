@@ -31,9 +31,9 @@ def main():
   try:
     amount = vol_new_size - vol_size
     cl.growVolume(vol_cname, amount)
-  except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
-       pprint.pprint("You must login first")                                                                                                                                                                                     
-  except Exception as ex:                                                                                                                                                                                                      
+  except exceptions.HTTPUnauthorized as ex: 
+       pprint.pprint("You must login first")
+  except Exception as ex: 
        print(ex)
 
   cl.logout()

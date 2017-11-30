@@ -30,9 +30,9 @@ def main():
   
   try:
     cl.deleteVolume(vol_cname)
-  except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
-       pprint.pprint("You must login first")                                                                                                                                                                                     
-  except Exception as ex:                                                                                                                                                                                                      
+  except exceptions.HTTPUnauthorized as ex: 
+       pprint.pprint("You must login first")
+  except Exception as ex: 
        print(ex)
 
   cl.logout()

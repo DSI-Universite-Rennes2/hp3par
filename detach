@@ -44,9 +44,9 @@ def main():
     cmd="for i in `pvs 2>&1 | grep 'read failed' | awk '{print $1}' | sed 's/://' | sed 's/\/dev\///' | uniq` ; do echo 1> /sys/block/$i/device/delete; done"
     result = utils.RunCmd(cmd)
 
-  except exceptions.HTTPUnauthorized as ex:                                                                                                                                                                                    
-       pprint.pprint("You must login first")                                                                                                                                                                                     
-  except Exception as ex:                                                                                                                                                                                                      
+  except exceptions.HTTPUnauthorized as ex: 
+       pprint.pprint("You must login first")
+  except Exception as ex:
        print(ex)
 
   cl.logout()
