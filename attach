@@ -5,6 +5,7 @@ import socket
 import ConfigParser
 import urllib3
 import time
+import signal
 
 # this is a hack to get the hpe driver module
 # and it's utils module on the search path.
@@ -17,6 +18,12 @@ import common
 
 sys.path.append("/usr/share/ganeti/default")
 from ganeti import utils
+
+class TimeoutError(Exception):
+    pass
+
+def _sig_alarm(sig, tb):
+    raise TimeoutError("timeout")
 
 
 def main():
@@ -57,11 +64,22 @@ def main():
     result = utils.RunCmd('ls -d /sys/class/fc_host/host*/issue_lip | xargs -i echo "echo 1 > {}" | sh')
     result = utils.RunCmd('multipath')
 
-    time.sleep(5)
+    signal.signal(signal.SIGALRM, _sig_alarm)
+    try:
+        signal.alarm(30)
+        cmd = "multipath -ll 3%s | head -1 | awk '{print $1}'" % uuid.lower().strip()
+        device = utils.RunCmd(cmd)
 
-    cmd = "multipath -ll 3%s | head -1 | awk '{print $1}'" % uuid.lower().strip()
-    device = utils.RunCmd(cmd)
-    sys.stdout.write("/dev/mapper/%s" % device.output.strip())
+        while device.output.strip() == "":
+           cmd = "multipath -ll 3%s | head -1 | awk '{print $1}'" % uuid.lower().strip()
+           device = utils.RunCmd(cmd)
+           sys.stdout.write('multipath -> %s\n' % device.output.strip())
+           time.sleep(1)
+
+        sys.stdout.write("/dev/mapper/%s" % device.output.strip())
+    except TimeoutError:
+        pass
+
   except exceptions.HTTPUnauthorized as ex:
        pprint.pprint("You must login first")
   except Exception as ex:
