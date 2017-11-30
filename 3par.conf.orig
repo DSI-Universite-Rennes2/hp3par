@@ -1,0 +1,7 @@
+[3par]
+
+host        = https://<api url>:8080/api/v1
+login       = <login>
+password    = <password>
+default_cpg = SSD_r5
+snap_cpg    = SSD_r5

@@ -6,7 +6,7 @@ import os
 
 def getConfig():
   #config
-  config_file = "/etc/ganeti/extstorage/3par.conf"
+  config_file = "3par.conf"
   config = ConfigParser.SafeConfigParser()
   if not config.read(config_file):
     raise ConfigParser.Error("Unable to read config file")
