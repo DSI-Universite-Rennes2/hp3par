@@ -19,9 +19,8 @@ Config :
 
 edit **3par.conf** file and copy it into **/etc/ganeti/extstorage/**
 
-    mkdir /etc/ganeti/extstorage/
-    cp 3par.conf /etc/ganeti/extstorage/
-    vim /etc/ganeti/extstorage/3par.conf
+    cp 3par.conf.orig 3par.conf
+    vim 3par.conf
 
 
 References :
